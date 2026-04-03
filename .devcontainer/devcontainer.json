@@ -1,0 +1,49 @@
+{
+  "name": "FUDMA CS Project Management Unit (Single File)",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    }
+  },
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "FUDMA Project Management App",
+      "onAutoForward": "openPreview"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "batisteo.vscode-django",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "formulahendry.auto-rename-tag",
+        "PKief.material-icon-theme",
+        "dbaeumer.vscode-eslint",
+        "xabikos.JavaScriptSnippets"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.python"
+        },
+        "files.exclude": {
+          "**/__pycache__": true,
+          "**/*.pyc": true,
+          "db.sqlite3": false
+        }
+      }
+    }
+  },
+  "remoteEnv": {
+    "DJANGO_SECRET_KEY": "fudma-codespaces-dev-secret-key-2024-change-in-production",
+    "DEBUG": "True"
+  }
+}
