@@ -1,0 +1,2337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FUDMA CS — Project Management Unit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --bg2: #0f1623;
+      --bg3: #151d2e;
+      --surface: #1a2336;
+      --surface2: #1f2a3e;
+      --border: #263247;
+      --border2: #2e3d57;
+      --accent: #3b82f6;
+      --accent2: #60a5fa;
+      --accent3: #1d4ed8;
+      --green: #10b981;
+      --green2: #059669;
+      --yellow: #f59e0b;
+      --orange: #f97316;
+      --red: #ef4444;
+      --purple: #8b5cf6;
+      --cyan: #06b6d4;
+      --text: #e2e8f0;
+      --text2: #94a3b8;
+      --text3: #64748b;
+      --radius: 12px;
+      --radius2: 8px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --shadow2: 0 2px 12px rgba(0,0,0,0.3);
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 15px; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    #root { min-height: 100vh; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes slideIn { from { opacity:0; transform:translateX(-20px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes notifPop {
+      0% { transform: scale(0.8) translateY(-10px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    .fade-in { animation: fadeIn 0.35s ease forwards; }
+    .slide-in { animation: slideIn 0.3s ease forwards; }
+
+    /* Loading screen */
+    #loading-screen {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.4s ease;
+    }
+    #loading-screen .logo-text {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent2);
+      letter-spacing: -0.03em;
+    }
+    #loading-screen .sub { color: var(--text3); font-size: 0.85rem; margin-top: 6px; }
+    .loader-bar {
+      width: 180px; height: 3px; background: var(--surface);
+      border-radius: 99px; overflow: hidden; margin-top: 24px;
+    }
+    .loader-bar-fill {
+      height: 100%; width: 40%;
+      background: linear-gradient(90deg, var(--accent3), var(--accent), var(--cyan));
+      border-radius: 99px;
+      animation: shimmer 1.4s infinite linear;
+      background-size: 200%;
+    }
+
+    /* Auth screen */
+    #auth-screen {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg);
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    #auth-screen::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    #auth-screen::after {
+      content: '';
+      position: absolute;
+      bottom: -200px; right: -200px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .auth-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+      animation: fadeIn 0.4s ease;
+      position: relative;
+      z-index: 1;
+    }
+    .auth-logo {
+      display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 32px;
+    }
+    .auth-logo .badge {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--accent3), var(--accent));
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 800; font-size: 1.2rem;
+      color: white; margin-bottom: 12px;
+      box-shadow: 0 8px 24px rgba(59,130,246,0.4);
+    }
+    .auth-logo h1 {
+      font-family: var(--font-display);
+      font-size: 1.4rem; font-weight: 700;
+      color: var(--text);
+    }
+    .auth-logo p { color: var(--text3); font-size: 0.82rem; text-align: center; margin-top: 4px; }
+
+    /* App shell */
+    #app-shell {
+      display: flex; min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 256px;
+      flex-shrink: 0;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: fixed; left: 0; top: 0; bottom: 0;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-header {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-logo .badge {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--accent3), var(--accent));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 800; font-size: 0.85rem;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(59,130,246,0.35);
+    }
+    .sidebar-logo .info h2 {
+      font-family: var(--font-display);
+      font-size: 0.9rem; font-weight: 700;
+      color: var(--text); line-height: 1.2;
+    }
+    .sidebar-logo .info p {
+      font-size: 0.7rem; color: var(--text3); margin-top: 1px;
+    }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 12px; }
+    .nav-section { margin-bottom: 20px; }
+    .nav-section-label {
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em;
+      color: var(--text3); text-transform: uppercase;
+      padding: 0 8px; margin-bottom: 6px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: var(--radius2);
+      color: var(--text2); font-size: 0.875rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s ease;
+      position: relative; text-decoration: none;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover { background: var(--surface); color: var(--text); }
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(96,165,250,0.08));
+      color: var(--accent2);
+      border-color: rgba(59,130,246,0.25);
+    }
+    .nav-item .icon { width: 18px; height: 18px; flex-shrink: 0; }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: white; font-size: 0.65rem; font-weight: 700;
+      padding: 1px 6px; border-radius: 99px; min-width: 18px;
+      text-align: center;
+    }
+    .sidebar-footer {
+      padding: 12px; border-top: 1px solid var(--border);
+    }
+    .user-widget {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px; border-radius: var(--radius2);
+      background: var(--surface); cursor: pointer;
+      transition: background 0.2s;
+    }
+    .user-widget:hover { background: var(--surface2); }
+    .avatar {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent3), var(--purple));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 700; font-size: 0.75rem; color: white;
+      flex-shrink: 0;
+    }
+    .avatar.sm { width: 28px; height: 28px; border-radius: 8px; font-size: 0.65rem; }
+    .avatar.lg { width: 48px; height: 48px; border-radius: 14px; font-size: 1rem; }
+    .user-widget .info { flex: 1; min-width: 0; }
+    .user-widget .info .name {
+      font-size: 0.82rem; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .user-widget .info .role {
+      font-size: 0.7rem; color: var(--text3);
+    }
+
+    /* Main content */
+    .main-content {
+      margin-left: 256px;
+      flex: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    /* Top bar */
+    .topbar {
+      height: 60px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 24px;
+      gap: 12px;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--text);
+    }
+    .topbar-breadcrumb {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.8rem; color: var(--text3);
+    }
+    .topbar-breadcrumb .current { color: var(--text2); }
+    .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .icon-btn {
+      width: 36px; height: 36px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; color: var(--text2);
+      position: relative;
+    }
+    .icon-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+    .notif-dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 8px; height: 8px;
+      background: var(--red); border-radius: 50%;
+      border: 2px solid var(--bg2);
+    }
+
+    /* Page content */
+    .page { padding: 28px 28px; flex: 1; animation: fadeIn 0.3s ease; }
+
+    /* Cards / grid */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: border-color 0.2s, transform 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .stat-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .stat-card.blue::before { background: linear-gradient(90deg, var(--accent3), var(--accent)); }
+    .stat-card.green::before { background: linear-gradient(90deg, var(--green2), var(--green)); }
+    .stat-card.yellow::before { background: linear-gradient(90deg, var(--orange), var(--yellow)); }
+    .stat-card.purple::before { background: linear-gradient(90deg, var(--purple), #a78bfa); }
+    .stat-card.cyan::before { background: linear-gradient(90deg, #0891b2, var(--cyan)); }
+    .stat-card .label { font-size: 0.75rem; color: var(--text3); font-weight: 500; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-card .value { font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--text); }
+    .stat-card .sub { font-size: 0.75rem; color: var(--text3); margin-top: 4px; }
+    .stat-card .icon-wrap {
+      position: absolute; top: 16px; right: 16px;
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0.7;
+    }
+    .stat-card.blue .icon-wrap { background: rgba(59,130,246,0.15); color: var(--accent2); }
+    .stat-card.green .icon-wrap { background: rgba(16,185,129,0.15); color: var(--green); }
+    .stat-card.yellow .icon-wrap { background: rgba(245,158,11,0.15); color: var(--yellow); }
+    .stat-card.purple .icon-wrap { background: rgba(139,92,246,0.15); color: var(--purple); }
+    .stat-card.cyan .icon-wrap { background: rgba(6,182,212,0.15); color: var(--cyan); }
+
+    /* Content cards */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 0.95rem; font-weight: 700; color: var(--text);
+    }
+    .card-body { padding: 20px; }
+
+    /* Two column grid */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    @media (max-width: 900px) {
+      .two-col, .three-col { grid-template-columns: 1fr; }
+      .sidebar { transform: translateX(-100%); }
+      .main-content { margin-left: 0; }
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 9px 18px; border-radius: var(--radius2);
+      font-family: var(--font-body); font-size: 0.875rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+      border: 1px solid transparent; text-decoration: none; white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent3), var(--accent));
+      color: white; border-color: var(--accent3);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+    }
+    .btn-primary:hover { box-shadow: 0 6px 18px rgba(59,130,246,0.45); transform: translateY(-1px); }
+    .btn-secondary {
+      background: var(--surface); color: var(--text2);
+      border-color: var(--border);
+    }
+    .btn-secondary:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+    .btn-success { background: linear-gradient(135deg, var(--green2), var(--green)); color: white; }
+    .btn-danger { background: linear-gradient(135deg, #dc2626, var(--red)); color: white; }
+    .btn-ghost { background: transparent; color: var(--text2); }
+    .btn-ghost:hover { background: var(--surface); color: var(--text); }
+    .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+    .btn-xs { padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    /* Status badges */
+    .badge-status {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 99px;
+      font-size: 0.73rem; font-weight: 600;
+    }
+    .badge-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .status-proposal { background: rgba(100,116,139,0.15); color: #94a3b8; }
+    .status-proposal::before { background: #64748b; }
+    .status-approved { background: rgba(6,182,212,0.12); color: var(--cyan); }
+    .status-approved::before { background: var(--cyan); }
+    .status-in_progress { background: rgba(59,130,246,0.12); color: var(--accent2); }
+    .status-in_progress::before { background: var(--accent); animation: pulse 2s infinite; }
+    .status-submitted { background: rgba(139,92,246,0.12); color: #a78bfa; }
+    .status-submitted::before { background: var(--purple); }
+    .status-revision { background: rgba(245,158,11,0.12); color: var(--yellow); }
+    .status-revision::before { background: var(--yellow); }
+    .status-completed { background: rgba(16,185,129,0.12); color: var(--green); }
+    .status-completed::before { background: var(--green); }
+    .status-rejected { background: rgba(239,68,68,0.12); color: var(--red); }
+    .status-rejected::before { background: var(--red); }
+
+    /* Role badge */
+    .role-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 6px;
+      font-size: 0.7rem; font-weight: 600; text-transform: capitalize;
+    }
+    .role-student { background: rgba(59,130,246,0.12); color: var(--accent2); }
+    .role-supervisor { background: rgba(16,185,129,0.12); color: var(--green); }
+    .role-coordinator { background: rgba(139,92,246,0.12); color: #a78bfa; }
+    .role-admin { background: rgba(239,68,68,0.12); color: var(--red); }
+
+    /* Form elements */
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+    }
+    .form-input::placeholder { color: var(--text3); }
+    .form-select { cursor: pointer; }
+    .form-select option { background: var(--surface); }
+    .form-textarea { resize: vertical; min-height: 90px; }
+    .form-error { font-size: 0.75rem; color: var(--red); margin-top: 4px; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { border-bottom: 1px solid var(--border); }
+    th { padding: 10px 16px; text-align: left; font-size: 0.73rem; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+    td { padding: 13px 16px; font-size: 0.875rem; color: var(--text2); border-bottom: 1px solid var(--border); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--surface); }
+    tbody tr { transition: background 0.15s; cursor: pointer; }
+
+    /* Progress bar */
+    .progress-wrap { background: var(--surface); border-radius: 99px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent3), var(--accent));
+      transition: width 0.5s ease;
+      position: relative; overflow: hidden;
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute; top: 0; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%);
+      animation: shimmer 2s infinite;
+      background-size: 200%;
+    }
+
+    /* Milestone timeline */
+    .milestone-list { display: flex; flex-direction: column; gap: 2px; }
+    .milestone-item {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .milestone-item:last-child { border-bottom: none; }
+    .milestone-dot {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 2px;
+    }
+    .milestone-dot.completed { background: rgba(16,185,129,0.15); color: var(--green); border: 2px solid var(--green); }
+    .milestone-dot.in_progress { background: rgba(59,130,246,0.15); color: var(--accent); border: 2px solid var(--accent); }
+    .milestone-dot.pending { background: var(--surface); color: var(--text3); border: 2px solid var(--border2); }
+    .milestone-dot.overdue { background: rgba(239,68,68,0.15); color: var(--red); border: 2px solid var(--red); }
+    .milestone-info { flex: 1; }
+    .milestone-info .title { font-weight: 600; color: var(--text); font-size: 0.9rem; }
+    .milestone-info .due { font-size: 0.75rem; color: var(--text3); margin-top: 3px; }
+
+    /* Comment / chat style */
+    .comment-list { display: flex; flex-direction: column; gap: 16px; }
+    .comment-item { display: flex; gap: 12px; }
+    .comment-bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px 12px 12px 12px;
+      padding: 12px 14px;
+      flex: 1;
+    }
+    .comment-bubble.feedback {
+      background: rgba(59,130,246,0.07);
+      border-color: rgba(59,130,246,0.2);
+    }
+    .comment-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .comment-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+    .comment-role-badge { font-size: 0.68rem; padding: 1px 6px; border-radius: 4px; background: var(--surface2); color: var(--text3); }
+    .comment-time { font-size: 0.7rem; color: var(--text3); margin-left: auto; }
+    .comment-body { font-size: 0.875rem; color: var(--text2); line-height: 1.55; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 18px;
+      width: 100%; max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+      animation: notifPop 0.25s ease;
+    }
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; }
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* Notification panel */
+    .notif-panel {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      width: 360px;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      z-index: 200;
+      overflow: hidden;
+      animation: notifPop 0.2s ease;
+    }
+    .notif-item {
+      display: flex; gap: 12px; padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s; cursor: pointer;
+    }
+    .notif-item:hover { background: var(--surface); }
+    .notif-item.unread { background: rgba(59,130,246,0.04); }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .notif-content .notif-title { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+    .notif-content .notif-msg { font-size: 0.77rem; color: var(--text3); margin-top: 2px; line-height: 1.4; }
+    .notif-content .notif-time { font-size: 0.7rem; color: var(--text3); margin-top: 4px; }
+
+    /* Empty state */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 48px 24px; color: var(--text3); text-align: center;
+    }
+    .empty-state svg { margin-bottom: 12px; opacity: 0.4; }
+    .empty-state p { font-size: 0.875rem; }
+
+    /* Search bar */
+    .search-bar {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      padding: 8px 12px;
+      transition: border-color 0.2s;
+    }
+    .search-bar:focus-within { border-color: var(--accent); }
+    .search-bar input {
+      background: none; border: none; outline: none;
+      color: var(--text); font-size: 0.875rem;
+      font-family: var(--font-body); flex: 1;
+    }
+    .search-bar input::placeholder { color: var(--text3); }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+    .tab-btn {
+      padding: 10px 16px; font-size: 0.875rem; font-weight: 500;
+      color: var(--text3); cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+      background: none; border-top: none; border-left: none; border-right: none;
+      font-family: var(--font-body);
+    }
+    .tab-btn:hover { color: var(--text2); }
+    .tab-btn.active { color: var(--accent2); border-bottom-color: var(--accent); }
+
+    /* Announcement */
+    .announcement-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .announcement-card:hover { border-color: var(--border2); }
+    .announcement-card.pinned { border-left: 3px solid var(--yellow); }
+    .announcement-card .ann-title { font-weight: 600; color: var(--text); margin-bottom: 6px; font-size: 0.95rem; }
+    .announcement-card .ann-body { font-size: 0.85rem; color: var(--text2); line-height: 1.55; }
+    .announcement-card .ann-meta { font-size: 0.72rem; color: var(--text3); margin-top: 10px; }
+    .pin-icon { position: absolute; top: 14px; right: 16px; color: var(--yellow); }
+
+    /* Spinner */
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
+    .spinner-sm { width: 18px; height: 18px; border-width: 2px; }
+
+    /* Tooltip */
+    [data-tip] { position: relative; }
+    [data-tip]:hover::after {
+      content: attr(data-tip);
+      position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-4px);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.72rem; padding: 4px 8px; border-radius: 6px;
+      white-space: nowrap; pointer-events: none;
+      border: 1px solid var(--border);
+      z-index: 300;
+    }
+
+    /* Tag */
+    .tag {
+      display: inline-block; padding: 2px 8px; border-radius: 6px;
+      font-size: 0.72rem; font-weight: 500;
+      background: var(--surface); color: var(--text3);
+      border: 1px solid var(--border);
+      margin: 2px;
+    }
+
+    /* Alert */
+    .alert {
+      padding: 12px 16px; border-radius: var(--radius2);
+      font-size: 0.85rem; margin-bottom: 16px;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .alert-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .alert-success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+    .alert-info { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: var(--accent2); }
+    .alert-warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--yellow); }
+
+    /* Toast */
+    #toast-container {
+      position: fixed; bottom: 24px; right: 24px;
+      z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+    }
+    .toast {
+      background: var(--bg3); border: 1px solid var(--border2);
+      border-radius: 12px; padding: 12px 16px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.85rem; color: var(--text);
+      box-shadow: var(--shadow);
+      animation: notifPop 0.25s ease;
+      min-width: 280px; max-width: 360px;
+    }
+    .toast.success { border-left: 3px solid var(--green); }
+    .toast.error { border-left: 3px solid var(--red); }
+    .toast.info { border-left: 3px solid var(--accent); }
+
+    /* Misc */
+    .text-muted { color: var(--text3); }
+    .text-sm { font-size: 0.82rem; }
+    .mt-4 { margin-top: 16px; }
+    .mb-4 { margin-bottom: 16px; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .flex-1 { flex: 1; }
+    .justify-between { justify-content: space-between; }
+    .font-display { font-family: var(--font-display); }
+    .font-bold { font-weight: 700; }
+
+    /* Divider */
+    hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+    /* Skeleton loading */
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <div class="logo-text">FUDMA</div>
+  <div class="sub">Computer Science — Project Management Unit</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<div id="toast-container"></div>
+<div id="root"></div>
+
+<!-- React, ReactDOM, Babel -->
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback, createContext, useContext } = React;
+
+// ─── API ──────────────────────────────────────────────────────
+const API_BASE = '/api';
+const api = {
+  token: () => localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type':'application/json', ...(api.token() ? {'Authorization':`Token ${api.token()}`} : {}) }),
+  async request(method, url, body=null, isFormData=false) {
+    const headers = isFormData
+      ? { Authorization: `Token ${api.token()}` }
+      : api.headers();
+    const res = await fetch(API_BASE + url, {
+      method,
+      headers,
+      body: body ? (isFormData ? body : JSON.stringify(body)) : null,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw { status: res.status, data: err };
+    }
+    if (res.status === 204) return null;
+    return res.json();
+  },
+  get: (url) => api.request('GET', url),
+  post: (url, body, isForm) => api.request('POST', url, body, isForm),
+  patch: (url, body) => api.request('PATCH', url, body),
+  put: (url, body) => api.request('PUT', url, body),
+  delete: (url) => api.request('DELETE', url),
+};
+
+// ─── Helpers ──────────────────────────────────────────────────
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-NG', { day:'numeric', month:'short', year:'numeric' });
+}
+function fmtRelative(d) {
+  if (!d) return '';
+  const diff = Date.now() - new Date(d);
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return `${Math.floor(diff/60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff/3600000)}h ago`;
+  return `${Math.floor(diff/86400000)}d ago`;
+}
+
+// ─── Toast ────────────────────────────────────────────────────
+function showToast(message, type='info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+  t.innerHTML = `<span style="font-weight:700">${icon}</span><span>${message}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(20px)'; t.style.transition='all 0.3s'; setTimeout(()=>t.remove(), 300); }, 3500);
+}
+
+// ─── Context ──────────────────────────────────────────────────
+const AppCtx = createContext(null);
+
+// ─── Icons ────────────────────────────────────────────────────
+const Icon = ({ name, size=16 }) => {
+  const icons = {
+    dashboard: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+    projects: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
+    users: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+    bell: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+    plus: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+    check: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+    clock: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+    x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+    edit: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+    trash: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
+    search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+    logout: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+    chevron_right: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+    chart: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+    announce: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>,
+    topic: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+    pin: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+    flag: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>,
+    upload: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>,
+    download: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>,
+    msg: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+    star: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+    profile: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  };
+  return icons[name] || null;
+};
+
+// ─── StatusBadge ──────────────────────────────────────────────
+const StatusBadge = ({ status }) => {
+  const labels = {
+    proposal:'Proposal', approved:'Approved', in_progress:'In Progress',
+    submitted:'Submitted', revision:'Needs Revision', completed:'Completed', rejected:'Rejected'
+  };
+  return <span className={`badge-status status-${status}`}>{labels[status] || status}</span>;
+};
+
+// ─── Avatar ───────────────────────────────────────────────────
+const AvatarEl = ({ initials, size='', colorSeed='' }) => {
+  const colors = ['linear-gradient(135deg,#1d4ed8,#3b82f6)','linear-gradient(135deg,#065f46,#10b981)','linear-gradient(135deg,#5b21b6,#8b5cf6)','linear-gradient(135deg,#92400e,#f59e0b)','linear-gradient(135deg,#9d174d,#ec4899)','linear-gradient(135deg,#0e7490,#06b6d4)'];
+  const bg = colors[(colorSeed||'').charCodeAt(0) % colors.length] || colors[0];
+  return <div className={`avatar ${size}`} style={{ background: bg }}>{initials || '?'}</div>;
+};
+
+// ─── ProgressBar ──────────────────────────────────────────────
+const ProgressBar = ({ value, height=8 }) => (
+  <div className="progress-wrap" style={{ height }}>
+    <div className="progress-fill" style={{ width: `${Math.min(100, value)}%` }} />
+  </div>
+);
+
+// ─── Auth Page ────────────────────────────────────────────────
+const AuthPage = ({ onLogin }) => {
+  const [tab, setTab] = useState('login');
+  const [form, setForm] = useState({ username:'', password:'', email:'', first_name:'', last_name:'', role:'student', matric_number:'', level:'400L', session:'2023/2024' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const submit = async () => {
+    setLoading(true); setError('');
+    try {
+      const endpoint = tab === 'login' ? '/auth/login/' : '/auth/register/';
+      const body = tab === 'login' ? { username: form.username, password: form.password } : form;
+      const data = await api.post(endpoint, body);
+      localStorage.setItem('token', data.token);
+      onLogin(data.user);
+      showToast(`Welcome, ${data.user.first_name || data.user.username}!`, 'success');
+    } catch(e) {
+      const msgs = e.data || {};
+      const msg = Object.values(msgs).flat().join(' ') || 'Something went wrong';
+      setError(msg);
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <div id="auth-screen">
+      <div className="auth-card">
+        <div className="auth-logo">
+          <div className="badge">FU</div>
+          <h1>FUDMA Project Unit</h1>
+          <p>Federal University Dutse — CS Department</p>
+        </div>
+
+        <div style={{display:'flex',gap:'4px',marginBottom:'24px',background:'var(--surface)',padding:'4px',borderRadius:'10px'}}>
+          {['login','register'].map(t => (
+            <button key={t} onClick={()=>{ setTab(t); setError(''); }}
+              style={{flex:1, padding:'8px', borderRadius:'8px', border:'none', cursor:'pointer', fontFamily:'var(--font-body)', fontWeight:500, fontSize:'0.875rem', transition:'all 0.2s',
+                background: tab===t ? 'var(--bg2)' : 'transparent',
+                color: tab===t ? 'var(--text)' : 'var(--text3)',
+                boxShadow: tab===t ? 'var(--shadow2)' : 'none'
+              }}>
+              {t === 'login' ? 'Sign In' : 'Create Account'}
+            </button>
+          ))}
+        </div>
+
+        {error && <div className="alert alert-error" style={{marginBottom:'16px'}}><Icon name="x" size={14}/>{error}</div>}
+
+        <div className="form-group">
+          <label className="form-label">Username</label>
+          <input className="form-input" placeholder="Enter username" value={form.username} onChange={e=>set('username',e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()} />
+        </div>
+
+        {tab === 'register' && (<>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+            <div className="form-group">
+              <label className="form-label">First Name</label>
+              <input className="form-input" placeholder="First name" value={form.first_name} onChange={e=>set('first_name',e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Last Name</label>
+              <input className="form-input" placeholder="Last name" value={form.last_name} onChange={e=>set('last_name',e.target.value)} />
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Email</label>
+            <input className="form-input" type="email" placeholder="your@email.com" value={form.email} onChange={e=>set('email',e.target.value)} />
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+            <div className="form-group">
+              <label className="form-label">Role</label>
+              <select className="form-select" value={form.role} onChange={e=>set('role',e.target.value)}>
+                <option value="student">Student</option>
+                <option value="supervisor">Supervisor</option>
+              </select>
+            </div>
+            {form.role === 'student' && (
+              <div className="form-group">
+                <label className="form-label">Matric Number</label>
+                <input className="form-input" placeholder="CSC/20/001" value={form.matric_number} onChange={e=>set('matric_number',e.target.value)} />
+              </div>
+            )}
+          </div>
+        </>)}
+
+        <div className="form-group">
+          <label className="form-label">Password</label>
+          <input className="form-input" type="password" placeholder="••••••••" value={form.password} onChange={e=>set('password',e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()} />
+        </div>
+
+        <button className="btn btn-primary" style={{width:'100%',padding:'11px'}} onClick={submit} disabled={loading}>
+          {loading ? <span className="spinner spinner-sm" /> : (tab==='login' ? 'Sign In' : 'Create Account')}
+        </button>
+
+        <div style={{marginTop:'20px',padding:'14px',background:'var(--surface)',borderRadius:'10px',border:'1px solid var(--border)'}}>
+          <p style={{fontSize:'0.72rem',color:'var(--text3)',marginBottom:'8px',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.05em'}}>Demo Accounts</p>
+          {[['admin','admin123','Admin'],['coordinator','coord123','Coordinator'],['dr_ibrahim','super123','Supervisor'],['ali_musa','student123','Student']].map(([u,p,r])=>(
+            <div key={u} onClick={()=>setForm(f=>({...f,username:u,password:p}))}
+              style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 8px',borderRadius:'6px',cursor:'pointer',marginBottom:'4px',transition:'background 0.15s'}}
+              onMouseEnter={e=>e.currentTarget.style.background='var(--surface2)'}
+              onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+              <span style={{fontSize:'0.78rem',color:'var(--text2)',fontFamily:'monospace'}}>{u}</span>
+              <span className={`role-badge role-${r.toLowerCase()}`} style={{fontSize:'0.65rem'}}>{r}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Sidebar ──────────────────────────────────────────────────
+const Sidebar = ({ user, currentPage, navigate, onLogout, unreadCount }) => {
+  const isAdmin = ['admin','coordinator'].includes(user.role);
+  const isSupervisor = user.role === 'supervisor';
+
+  const navItems = [
+    { id:'dashboard', label:'Dashboard', icon:'dashboard', roles:['all'] },
+    { id:'projects', label:'Projects', icon:'projects', roles:['all'] },
+    ...(isAdmin || isSupervisor ? [{ id:'users', label:'People', icon:'users', roles:['admin','coordinator','supervisor'] }] : []),
+    { id:'topics', label:'Topics', icon:'topic', roles:['all'] },
+    { id:'announcements', label:'Announcements', icon:'announce', roles:['all'] },
+    { id:'notifications', label:'Notifications', icon:'bell', roles:['all'], badge: unreadCount },
+    ...(isAdmin ? [{ id:'stats', label:'Analytics', icon:'chart', roles:['admin','coordinator'] }] : []),
+    { id:'profile', label:'My Profile', icon:'profile', roles:['all'] },
+  ];
+
+  return (
+    <aside className="sidebar">
+      <div className="sidebar-header">
+        <div className="sidebar-logo">
+          <div className="badge">CS</div>
+          <div className="info">
+            <h2>Project Unit</h2>
+            <p>FUDMA — Computer Science</p>
+          </div>
+        </div>
+      </div>
+
+      <nav className="sidebar-nav">
+        <div className="nav-section">
+          <div className="nav-section-label">Navigation</div>
+          {navItems.filter(i => i.roles.includes('all') || i.roles.includes(user.role)).map(item => (
+            <div key={item.id} className={`nav-item ${currentPage===item.id?'active':''}`} onClick={()=>navigate(item.id)}>
+              <span className="icon"><Icon name={item.icon} size={16} /></span>
+              {item.label}
+              {item.badge > 0 && <span className="nav-badge">{item.badge}</span>}
+            </div>
+          ))}
+        </div>
+      </nav>
+
+      <div className="sidebar-footer">
+        <div className="user-widget" onClick={()=>navigate('profile')}>
+          <AvatarEl initials={user.avatar_initials} colorSeed={user.username} />
+          <div className="info">
+            <div className="name">{user.first_name} {user.last_name}</div>
+            <div className="role" style={{textTransform:'capitalize'}}>{user.role}</div>
+          </div>
+          <button className="btn btn-ghost" style={{padding:'6px',marginLeft:'auto'}} onClick={e=>{e.stopPropagation();onLogout();}} title="Logout">
+            <Icon name="logout" size={15}/>
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+// ─── Dashboard ────────────────────────────────────────────────
+const Dashboard = ({ user, navigate }) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get('/dashboard/').then(setData).catch(()=>showToast('Failed to load dashboard','error')).finally(()=>setLoading(false));
+  }, []);
+
+  if (loading) return <div className="page"><div style={{display:'flex',justifyContent:'center',paddingTop:80}}><div className="spinner"/></div></div>;
+
+  const isAdmin = ['admin','coordinator'].includes(user.role);
+
+  return (
+    <div className="page fade-in">
+      {/* Welcome */}
+      <div style={{marginBottom:'24px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px'}}>
+        <div>
+          <h1 style={{fontFamily:'var(--font-display)',fontSize:'1.5rem',fontWeight:'800',color:'var(--text)'}}>
+            Good {new Date().getHours()<12?'morning':new Date().getHours()<17?'afternoon':'evening'}, {user.first_name || user.username} 👋
+          </h1>
+          <p style={{color:'var(--text3)',fontSize:'0.875rem',marginTop:'4px'}}>Here's what's happening in the project unit today.</p>
+        </div>
+        {(isAdmin || user.role==='supervisor') && (
+          <button className="btn btn-primary" onClick={()=>navigate('projects')}>
+            <Icon name="plus" size={15}/> New Project
+          </button>
+        )}
+      </div>
+
+      {/* Stats */}
+      {isAdmin && data && (
+        <div className="stat-grid">
+          {[
+            { label:'Total Projects', value: data.total_projects, sub:'This session', color:'blue', icon:'projects' },
+            { label:'In Progress', value: data.by_status?.in_progress || 0, sub:'Active projects', color:'cyan', icon:'clock' },
+            { label:'Completed', value: data.by_status?.completed || 0, sub:'Successfully done', color:'green', icon:'check' },
+            { label:'Pending Review', value: (data.by_status?.submitted||0)+(data.by_status?.revision||0), sub:'Need attention', color:'yellow', icon:'flag' },
+            { label:'Total Students', value: data.total_students || '—', sub:'Registered', color:'purple', icon:'users' },
+          ].map((s,i) => (
+            <div key={i} className={`stat-card ${s.color}`}>
+              <div className="label">{s.label}</div>
+              <div className="value">{s.value}</div>
+              <div className="sub">{s.sub}</div>
+              <div className="icon-wrap"><Icon name={s.icon} size={18}/></div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Student: own project */}
+      {user.role === 'student' && data && (
+        <>
+          {data.project ? (
+            <div className="two-col" style={{marginBottom:'20px'}}>
+              <div className="card">
+                <div className="card-header">
+                  <span className="card-title">My Project</span>
+                  <StatusBadge status={data.project.status} />
+                </div>
+                <div className="card-body">
+                  <p style={{fontFamily:'var(--font-display)',fontWeight:'700',fontSize:'1.05rem',color:'var(--text)',marginBottom:'8px'}}>{data.project.title}</p>
+                  <p style={{fontSize:'0.82rem',color:'var(--text3)',marginBottom:'16px'}}>Supervisor: {data.project.supervisor_name || 'Not assigned'}</p>
+                  <div style={{marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <span style={{fontSize:'0.78rem',color:'var(--text3)'}}>Progress</span>
+                    <span style={{fontSize:'0.78rem',color:'var(--accent2)',fontWeight:600}}>
+                      {data.project.completed_milestones}/{data.project.milestone_count} milestones
+                    </span>
+                  </div>
+                  <ProgressBar value={data.project.milestone_count > 0 ? (data.project.completed_milestones/data.project.milestone_count)*100 : 0} height={10} />
+                  <div style={{marginTop:'16px'}}>
+                    <button className="btn btn-primary btn-sm" onClick={()=>navigate('projects')}>View Project →</button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-header"><span className="card-title">Milestones</span></div>
+                <div style={{padding:'0 20px'}}>
+                  {data.milestones?.length > 0 ? (
+                    <div className="milestone-list">
+                      {data.milestones.slice(0,5).map(m => (
+                        <div key={m.id} className="milestone-item">
+                          <div className={`milestone-dot ${m.status}`}>
+                            {m.status==='completed' ? <Icon name="check" size={12}/> : <Icon name="clock" size={12}/>}
+                          </div>
+                          <div className="milestone-info">
+                            <div className="title">{m.title}</div>
+                            <div className="due">{m.due_date ? `Due: ${fmtDate(m.due_date)}` : 'No due date'}</div>
+                          </div>
+                          <span className={`badge-status status-${m.status}`} style={{fontSize:'0.68rem'}}>{m.status.replace('_',' ')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : <div className="empty-state"><p>No milestones yet</p></div>}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="card" style={{marginBottom:'20px'}}>
+              <div className="card-body" style={{textAlign:'center',padding:'40px'}}>
+                <div style={{color:'var(--text3)',marginBottom:'16px'}}><Icon name="projects" size={40}/></div>
+                <h3 style={{fontFamily:'var(--font-display)',fontWeight:'700',marginBottom:'8px'}}>No Project Yet</h3>
+                <p style={{color:'var(--text3)',fontSize:'0.875rem',marginBottom:'16px'}}>You haven't been assigned a project. Contact your coordinator.</p>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Admin/Supervisor: recent projects */}
+      {(isAdmin || user.role==='supervisor') && data?.recent_projects?.length > 0 && (
+        <div className="card" style={{marginBottom:'20px'}}>
+          <div className="card-header">
+            <span className="card-title">Recent Projects</span>
+            <button className="btn btn-ghost btn-sm" onClick={()=>navigate('projects')}>View All →</button>
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Student</th><th>Project Title</th><th>Supervisor</th><th>Status</th><th>Progress</th><th>Updated</th></tr></thead>
+              <tbody>
+                {data.recent_projects.map(p => (
+                  <tr key={p.id} onClick={()=>navigate('project-detail', p.id)}>
+                    <td>
+                      <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                        <AvatarEl initials={p.student_avatar} colorSeed={p.student_matric} size="sm"/>
+                        <div>
+                          <div style={{fontWeight:500,color:'var(--text)',fontSize:'0.82rem'}}>{p.student_name}</div>
+                          <div style={{fontSize:'0.7rem',color:'var(--text3)'}}>{p.student_matric}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{maxWidth:'220px'}}>
+                      <span style={{fontWeight:500,color:'var(--text)',display:'block',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{p.title}</span>
+                    </td>
+                    <td style={{color:'var(--text3)',fontSize:'0.82rem'}}>{p.supervisor_name || '—'}</td>
+                    <td><StatusBadge status={p.status}/></td>
+                    <td style={{width:120}}>
+                      <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                        <ProgressBar value={p.milestone_count > 0 ? (p.completed_milestones/p.milestone_count)*100 : 0} height={6}/>
+                        <span style={{fontSize:'0.72rem',color:'var(--text3)',whiteSpace:'nowrap'}}>{p.milestone_count>0?Math.round((p.completed_milestones/p.milestone_count)*100):0}%</span>
+                      </div>
+                    </td>
+                    <td style={{color:'var(--text3)',fontSize:'0.75rem'}}>{fmtRelative(p.updated_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Two-col: announcements + notifications */}
+      <div className="two-col">
+        <div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'14px'}}>
+            <h3 style={{fontFamily:'var(--font-display)',fontWeight:'700',fontSize:'0.95rem'}}>Announcements</h3>
+            <button className="btn btn-ghost btn-sm" onClick={()=>navigate('announcements')}>All →</button>
+          </div>
+          {data?.announcements?.length > 0 ? data.announcements.slice(0,3).map(a => (
+            <div key={a.id} className={`announcement-card ${a.is_pinned?'pinned':''}`}>
+              {a.is_pinned && <span className="pin-icon"><Icon name="pin" size={14}/></span>}
+              <div className="ann-title">{a.title}</div>
+              <div className="ann-body" style={{WebkitLineClamp:2,display:'-webkit-box',WebkitBoxOrient:'vertical',overflow:'hidden'}}>{a.body}</div>
+              <div className="ann-meta">By {a.author_name} · {fmtRelative(a.created_at)}</div>
+            </div>
+          )) : <div className="empty-state" style={{padding:'24px'}}><p>No announcements</p></div>}
+        </div>
+
+        <div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'14px'}}>
+            <h3 style={{fontFamily:'var(--font-display)',fontWeight:'700',fontSize:'0.95rem'}}>Recent Notifications</h3>
+            <button className="btn btn-ghost btn-sm" onClick={()=>navigate('notifications')}>All →</button>
+          </div>
+          {data?.notifications?.length > 0 ? data.notifications.slice(0,5).map(n => (
+            <div key={n.id} style={{display:'flex',gap:'10px',padding:'12px',background:'var(--bg2)',borderRadius:'10px',border:'1px solid var(--border)',marginBottom:'8px'}}>
+              <div className="notif-icon" style={{background:'rgba(59,130,246,0.1)',color:'var(--accent2)'}}><Icon name="bell" size={14}/></div>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:600,fontSize:'0.82rem',color:'var(--text)'}}>{n.title}</div>
+                <div style={{fontSize:'0.75rem',color:'var(--text3)',marginTop:'2px'}}>{n.message.substring(0,80)}{n.message.length>80?'...':''}</div>
+                <div style={{fontSize:'0.7rem',color:'var(--text3)',marginTop:'4px'}}>{fmtRelative(n.created_at)}</div>
+              </div>
+              {!n.is_read && <div style={{width:8,height:8,borderRadius:'50%',background:'var(--accent)',flexShrink:0,marginTop:6}}/>}
+            </div>
+          )) : <div className="empty-state" style={{padding:'24px'}}><p>All caught up!</p></div>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Projects List ────────────────────────────────────────────
+const ProjectsList = ({ user, navigate }) => {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [supervisors, setSupervisors] = useState([]);
+  const [topics, setTopics] = useState([]);
+  const [newProject, setNewProject] = useState({ title:'', abstract:'', session:'2023/2024', keywords:'', tools_used:'', supervisor_id:'', topic_id:'' });
+  const [saving, setSaving] = useState(false);
+
+  const isAdmin = ['admin','coordinator'].includes(user.role);
+  const canCreate = isAdmin;
+
+  useEffect(() => {
+    let url = '/projects/';
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (statusFilter) params.set('status', statusFilter);
+    if (params.toString()) url += '?' + params.toString();
+    api.get(url).then(d => setProjects(d.results || d)).catch(()=>showToast('Failed to load projects','error')).finally(()=>setLoading(false));
+  }, [search, statusFilter]);
+
+  useEffect(() => {
+    if (canCreate) {
+      api.get('/auth/users/?role=supervisor').then(d=>setSupervisors(d.results||d));
+      api.get('/topics/').then(d=>setTopics(d.results||d));
+    }
+  }, [canCreate]);
+
+  const createProject = async () => {
+    setSaving(true);
+    try {
+      await api.post('/projects/', newProject);
+      showToast('Project created successfully!', 'success');
+      setShowModal(false);
+      const data = await api.get('/projects/');
+      setProjects(data.results || data);
+    } catch(e) {
+      const msg = Object.values(e.data||{}).flat().join(' ') || 'Failed to create project';
+      showToast(msg, 'error');
+    } finally { setSaving(false); }
+  };
+
+  const statusOpts = [
+    { value:'', label:'All Statuses' },
+    { value:'proposal', label:'Proposal' },
+    { value:'approved', label:'Approved' },
+    { value:'in_progress', label:'In Progress' },
+    { value:'submitted', label:'Submitted' },
+    { value:'revision', label:'Needs Revision' },
+    { value:'completed', label:'Completed' },
+    { value:'rejected', label:'Rejected' },
+  ];
+
+  return (
+    <div className="page fade-in">
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'24px',flexWrap:'wrap',gap:'12px'}}>
+        <div>
+          <h1 style={{fontFamily:'var(--font-display)',fontSize:'1.4rem',fontWeight:'800'}}>Projects</h1>
+          <p style={{color:'var(--text3)',fontSize:'0.82rem',marginTop:'3px'}}>{projects.length} project{projects.length!==1?'s':''} found</p>
+        </div>
+        {canCreate && <button className="btn btn-primary" onClick={()=>setShowModal(true)}><Icon name="plus" size={15}/> New Project</button>}
+      </div>
+
+      {/* Filters */}
+      <div style={{display:'flex',gap:'10px',marginBottom:'20px',flexWrap:'wrap'}}>
+        <div className="search-bar" style={{flex:1,minWidth:'200px'}}>
+          <Icon name="search" size={15}/>
+          <input placeholder="Search by title, student, matric…" value={search} onChange={e=>setSearch(e.target.value)} />
+        </div>
+        <select className="form-select" style={{width:'160px'}} value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}>
+          {statusOpts.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      </div>
+
+      {loading ? (
+        <div style={{display:'flex',justifyContent:'center',paddingTop:60}}><div className="spinner"/></div>
+      ) : projects.length === 0 ? (
+        <div className="empty-state"><Icon name="projects" size={40}/><p style={{marginTop:'12px',fontSize:'0.875rem'}}>No projects found</p></div>
+      ) : (
+        <div className="card">
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Project Title</th>
+                  <th>Supervisor</th>
+                  <th>Session</th>
+                  <th>Status</th>
+                  <th>Progress</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projects.map(p => (
+                  <tr key={p.id} onClick={()=>navigate('project-detail', p.id)}>
+                    <td>
+                      <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                        <AvatarEl initials={p.student_avatar} colorSeed={p.student_matric} size="sm"/>
+                        <div>
+                          <div style={{fontWeight:500,color:'var(--text)',fontSize:'0.82rem'}}>{p.student_name}</div>
+                          <div style={{fontSize:'0.7rem',color:'var(--text3)'}}>{p.student_matric}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{maxWidth:'250px'}}>
+                      <span style={{fontWeight:500,color:'var(--text)',display:'block',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{p.title}</span>
+                      {p.keywords && <div style={{marginTop:'3px'}}>{p.keywords.split(',').slice(0,2).map(k=><span key={k} className="tag" style={{fontSize:'0.65rem',padding:'1px 5px'}}>{k.trim()}</span>)}</div>}
+                    </td>
+                    <td style={{color:'var(--text3)',fontSize:'0.82rem'}}>{p.supervisor_name||<span style={{color:'var(--text3)',fontStyle:'italic'}}>Unassigned</span>}</td>
+                    <td style={{color:'var(--text3)',fontSize:'0.82rem'}}>{p.session||'—'}</td>
+                    <td><StatusBadge status={p.status}/></td>
+                    <td style={{width:140}}>
+                      <div>
+                        <ProgressBar value={p.milestone_count>0?(p.completed_milestones/p.milestone_count)*100:0} height={6}/>
+                        <div style={{fontSize:'0.68rem',color:'var(--text3)',marginTop:'3px'}}>{p.completed_milestones}/{p.milestone_count} milestones</div>
+                      </div>
+                    </td>
+                    <td style={{color:'var(--text3)',fontSize:'0.75rem'}}>{fmtRelative(p.updated_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Create Modal */}
+      {showModal && (
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setShowModal(false)}>
+          <div className="modal">
+            <div className="modal-header">
+              <span className="modal-title">Create New Project</span>
+              <button className="btn btn-ghost" style={{padding:'6px'}} onClick={()=>setShowModal(false)}><Icon name="x" size={16}/></button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label">Project Title *</label>
+                <input className="form-input" placeholder="e.g. AI-Powered Result Management System" value={newProject.title} onChange={e=>setNewProject(f=>({...f,title:e.target.value}))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Abstract</label>
+                <textarea className="form-textarea" placeholder="Brief description of the project…" value={newProject.abstract} onChange={e=>setNewProject(f=>({...f,abstract:e.target.value}))} />
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+                <div className="form-group">
+                  <label className="form-label">Session</label>
+                  <select className="form-select" value={newProject.session} onChange={e=>setNewProject(f=>({...f,session:e.target.value}))}>
+                    {['2023/2024','2022/2023','2021/2022'].map(s=><option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Topic</label>
+                  <select className="form-select" value={newProject.topic_id} onChange={e=>setNewProject(f=>({...f,topic_id:e.target.value}))}>
+                    <option value="">Select topic…</option>
+                    {topics.map(t=><option key={t.id} value={t.id}>{t.title}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Supervisor</label>
+                <select className="form-select" value={newProject.supervisor_id} onChange={e=>setNewProject(f=>({...f,supervisor_id:e.target.value}))}>
+                  <option value="">Assign later…</option>
+                  {supervisors.map(s=><option key={s.id} value={s.id}>{s.full_name}</option>)}
+                </select>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+                <div className="form-group">
+                  <label className="form-label">Keywords</label>
+                  <input className="form-input" placeholder="AI, Django, React" value={newProject.keywords} onChange={e=>setNewProject(f=>({...f,keywords:e.target.value}))} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Tools Used</label>
+                  <input className="form-input" placeholder="Python, Django, React" value={newProject.tools_used} onChange={e=>setNewProject(f=>({...f,tools_used:e.target.value}))} />
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={()=>setShowModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={createProject} disabled={saving||!newProject.title}>
+                {saving ? <span className="spinner spinner-sm"/> : 'Create Project'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Project Detail ───────────────────────────────────────────
+const ProjectDetail = ({ projectId, user, navigate }) => {
+  const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState('overview');
+  const [comment, setComment] = useState('');
+  const [sendingComment, setSendingComment] = useState(false);
+  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+  const [newMilestone, setNewMilestone] = useState({ title:'', description:'', due_date:'', status:'pending' });
+  const [editStatus, setEditStatus] = useState('');
+  const [supervisors, setSupervisors] = useState([]);
+
+  const isAdmin = ['admin','coordinator'].includes(user.role);
+  const isSupervisor = user.role === 'supervisor';
+  const canEdit = isAdmin || isSupervisor;
+
+  const refresh = () => {
+    api.get(`/projects/${projectId}/`).then(d => { setProject(d); setEditStatus(d.status); }).catch(()=>showToast('Failed to load project','error')).finally(()=>setLoading(false));
+  };
+
+  useEffect(() => {
+    refresh();
+    if (canEdit) api.get('/auth/users/?role=supervisor').then(d=>setSupervisors(d.results||d));
+  }, [projectId]);
+
+  const postComment = async () => {
+    if (!comment.trim()) return;
+    setSendingComment(true);
+    try {
+      await api.post(`/projects/${projectId}/comments/`, { content: comment, is_feedback: isSupervisor||isAdmin });
+      setComment('');
+      refresh();
+    } catch { showToast('Failed to post comment','error'); }
+    finally { setSendingComment(false); }
+  };
+
+  const updateStatus = async (status) => {
+    try {
+      await api.patch(`/projects/${projectId}/`, { status });
+      showToast('Status updated!','success');
+      refresh();
+    } catch { showToast('Failed to update status','error'); }
+  };
+
+  const updateMilestone = async (id, data) => {
+    try {
+      await api.patch(`/projects/${projectId}/milestones/${id}/`, data);
+      showToast('Milestone updated','success');
+      refresh();
+    } catch { showToast('Failed to update milestone','error'); }
+  };
+
+  const addMilestone = async () => {
+    try {
+      await api.post(`/projects/${projectId}/milestones/`, newMilestone);
+      showToast('Milestone added!','success');
+      setShowMilestoneModal(false);
+      setNewMilestone({ title:'', description:'', due_date:'', status:'pending' });
+      refresh();
+    } catch { showToast('Failed to add milestone','error'); }
+  };
+
+  if (loading) return <div className="page"><div style={{display:'flex',justifyContent:'center',paddingTop:80}}><div className="spinner"/></div></div>;
+  if (!project) return <div className="page"><div className="empty-state"><p>Project not found</p></div></div>;
+
+  const progress = project.progress_percent || 0;
+
+  const statusOpts = [
+    { value:'proposal', label:'Proposal' },
+    { value:'approved', label:'Approved' },
+    { value:'in_progress', label:'In Progress' },
+    { value:'submitted', label:'Submitted' },
+    { value:'revision', label:'Needs Revision' },
+    { value:'completed', label:'Completed' },
+    { value:'rejected', label:'Rejected' },
+  ];
+
+  return (
+    <div className="page fade-in">
+      {/* Back + header */}
+      <div style={{marginBottom:'20px'}}>
+        <button className="btn btn-ghost btn-sm" onClick={()=>navigate('projects')} style={{marginBottom:'12px',paddingLeft:'4px'}}>
+          ← Back to Projects
+        </button>
+        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:'12px',flexWrap:'wrap'}}>
+          <div>
+            <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'6px',flexWrap:'wrap'}}>
+              <StatusBadge status={project.status}/>
+              {project.session && <span className="tag">{project.session}</span>}
+              {project.grade && <span className="tag" style={{background:'rgba(16,185,129,0.1)',color:'var(--green)',borderColor:'rgba(16,185,129,0.2)'}}>Grade: {project.grade}</span>}
+            </div>
+            <h1 style={{fontFamily:'var(--font-display)',fontSize:'1.4rem',fontWeight:'800',color:'var(--text)',lineHeight:1.3}}>{project.title}</h1>
+          </div>
+
+          {canEdit && (
+            <div style={{display:'flex',gap:'8px',alignItems:'center',flexWrap:'wrap'}}>
+              <select className="form-select" style={{width:'170px',fontSize:'0.82rem'}} value={editStatus} onChange={e=>{setEditStatus(e.target.value);updateStatus(e.target.value);}}>
+                {statusOpts.map(s=><option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Info bar */}
+      <div style={{display:'flex',gap:'12px',marginBottom:'24px',flexWrap:'wrap'}}>
+        {[
+          { label:'Student', value: project.student?.first_name+' '+project.student?.last_name, sub: project.student?.matric_number },
+          { label:'Supervisor', value: project.supervisor ? project.supervisor.first_name+' '+project.supervisor.last_name : 'Not Assigned', sub: project.supervisor ? 'Supervisor' : '' },
+          { label:'Deadline', value: fmtDate(project.deadline), sub: 'Final submission' },
+          { label:'Progress', value: `${progress}%`, sub: `${project.milestones?.filter(m=>m.status==='completed').length||0}/${project.milestones?.length||0} milestones` },
+        ].map((item,i) => (
+          <div key={i} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:'10px',padding:'14px 18px',minWidth:'150px',flex:1}}>
+            <div style={{fontSize:'0.7rem',color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:'4px'}}>{item.label}</div>
+            <div style={{fontWeight:600,color:'var(--text)',fontSize:'0.9rem'}}>{item.value}</div>
+            {item.sub && <div style={{fontSize:'0.72rem',color:'var(--text3)',marginTop:'2px'}}>{item.sub}</div>}
+          </div>
+        ))}
+      </div>
+
+      {/* Progress */}
+      <div style={{marginBottom:'24px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px'}}>
+          <span style={{fontSize:'0.82rem',color:'var(--text3)',fontWeight:500}}>Overall Progress</span>
+          <span style={{fontSize:'0.82rem',color:'var(--accent2)',fontWeight:700}}>{progress}%</span>
+        </div>
+        <ProgressBar value={progress} height={12}/>
+      </div>
+
+      {/* Tabs */}
+      <div className="tabs">
+        {['overview','milestones','comments','documents'].map(t=>(
+          <button key={t} className={`tab-btn ${tab===t?'active':''}`} onClick={()=>setTab(t)}
+            style={{textTransform:'capitalize'}}>
+            {t}{t==='comments'&&project.comments?.length>0?` (${project.comments.length})`:''}{t==='documents'&&project.documents?.length>0?` (${project.documents.length})`:''}{t==='milestones'&&project.milestones?.length>0?` (${project.milestones.length})`:''}
+          </button>
+        ))}
+      </div>
+
+      {/* Overview */}
+      {tab === 'overview' && (
+        <div className="two-col fade-in">
+          <div>
+            <div className="card" style={{marginBottom:'16px'}}>
+              <div className="card-header"><span className="card-title">Abstract</span></div>
+              <div className="card-body">
+                <p style={{color:'var(--text2)',lineHeight:1.7,fontSize:'0.875rem'}}>{project.abstract || <em style={{color:'var(--text3)'}}>No abstract provided.</em>}</p>
+              </div>
+            </div>
+            {(project.keywords||project.tools_used) && (
+              <div className="card">
+                <div className="card-header"><span className="card-title">Details</span></div>
+                <div className="card-body">
+                  {project.keywords && <div style={{marginBottom:'12px'}}>
+                    <div style={{fontSize:'0.75rem',color:'var(--text3)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Keywords</div>
+                    {project.keywords.split(',').map(k=><span key={k} className="tag">{k.trim()}</span>)}
+                  </div>}
+                  {project.tools_used && <div>
+                    <div style={{fontSize:'0.75rem',color:'var(--text3)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Tools & Technologies</div>
+                    {project.tools_used.split(',').map(t=><span key={t} className="tag" style={{background:'rgba(59,130,246,0.08)',color:'var(--accent2)',borderColor:'rgba(59,130,246,0.2)'}}>{t.trim()}</span>)}
+                  </div>}
+                </div>
+              </div>
+            )}
+          </div>
+          <div>
+            <div className="card">
+              <div className="card-header"><span className="card-title">Team</span></div>
+              <div className="card-body">
+                {[
+                  { label:'Student', person: project.student },
+                  { label:'Supervisor', person: project.supervisor },
+                ].map(({label, person}) => person && (
+                  <div key={label} style={{display:'flex',alignItems:'center',gap:'12px',padding:'12px 0',borderBottom:'1px solid var(--border)'}}>
+                    <AvatarEl initials={person.avatar_initials} colorSeed={person.username} size="lg"/>
+                    <div>
+                      <div style={{fontWeight:600,color:'var(--text)'}}>{person.first_name} {person.last_name}</div>
+                      <div style={{fontSize:'0.78rem',color:'var(--text3)',marginTop:'2px'}}>{person.email}</div>
+                      <div style={{marginTop:'4px'}}><span className={`role-badge role-${person.role}`}>{label}</span></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Milestones */}
+      {tab === 'milestones' && (
+        <div className="fade-in">
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:'16px'}}>
+            <div/>
+            {canEdit && (
+              <button className="btn btn-primary btn-sm" onClick={()=>setShowMilestoneModal(true)}>
+                <Icon name="plus" size={14}/> Add Milestone
+              </button>
+            )}
+          </div>
+          <div className="card">
+            <div style={{padding:'0 20px'}}>
+              {project.milestones?.length > 0 ? (
+                <div className="milestone-list">
+                  {project.milestones.map(m => (
+                    <div key={m.id} className="milestone-item">
+                      <div className={`milestone-dot ${m.status}`}>
+                        {m.status==='completed'?<Icon name="check" size={12}/>:m.status==='overdue'?<Icon name="x" size={12}/>:<Icon name="clock" size={12}/>}
+                      </div>
+                      <div className="milestone-info" style={{flex:1}}>
+                        <div className="title">{m.title}</div>
+                        {m.description && <div style={{fontSize:'0.78rem',color:'var(--text3)',marginTop:'3px'}}>{m.description}</div>}
+                        <div className="due">{m.due_date?`Due: ${fmtDate(m.due_date)}`:'No due date'}</div>
+                      </div>
+                      <div style={{display:'flex',gap:'8px',alignItems:'center',flexWrap:'wrap'}}>
+                        <span className={`badge-status status-${m.status}`} style={{fontSize:'0.7rem'}}>{m.status.replace('_',' ')}</span>
+                        {canEdit && m.status !== 'completed' && (
+                          <button className="btn btn-success btn-xs" onClick={()=>updateMilestone(m.id,{status:'completed'})}>
+                            <Icon name="check" size={11}/> Done
+                          </button>
+                        )}
+                        {canEdit && m.status === 'pending' && (
+                          <button className="btn btn-secondary btn-xs" onClick={()=>updateMilestone(m.id,{status:'in_progress'})}>
+                            Start
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : <div className="empty-state"><Icon name="clock" size={36}/><p>No milestones added yet</p></div>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Comments */}
+      {tab === 'comments' && (
+        <div className="fade-in">
+          <div className="comment-list" style={{marginBottom:'20px'}}>
+            {project.comments?.length > 0 ? project.comments.map(c => (
+              <div key={c.id} className="comment-item">
+                <AvatarEl initials={c.author_initials} colorSeed={c.author_initials} size="sm"/>
+                <div className={`comment-bubble ${c.is_feedback?'feedback':''}`}>
+                  <div className="comment-meta">
+                    <span className="comment-name">{c.author_name}</span>
+                    <span className="comment-role-badge">{c.author_role}</span>
+                    {c.is_feedback && <span style={{fontSize:'0.68rem',padding:'1px 6px',borderRadius:'4px',background:'rgba(59,130,246,0.1)',color:'var(--accent2)'}}>Feedback</span>}
+                    <span className="comment-time">{fmtRelative(c.created_at)}</span>
+                  </div>
+                  <div className="comment-body">{c.content}</div>
+                </div>
+              </div>
+            )) : <div className="empty-state"><Icon name="msg" size={36}/><p>No comments yet. Start the conversation!</p></div>}
+          </div>
+          <div style={{display:'flex',gap:'10px',alignItems:'flex-end'}}>
+            <AvatarEl initials={user.avatar_initials} colorSeed={user.username} size="sm"/>
+            <div style={{flex:1}}>
+              <textarea className="form-textarea" style={{minHeight:'70px',marginBottom:0}}
+                placeholder="Write a comment or feedback…"
+                value={comment}
+                onChange={e=>setComment(e.target.value)}
+              />
+              <div style={{display:'flex',justifyContent:'flex-end',marginTop:'8px'}}>
+                <button className="btn btn-primary btn-sm" onClick={postComment} disabled={sendingComment||!comment.trim()}>
+                  {sendingComment?<span className="spinner spinner-sm"/>:<><Icon name="msg" size={13}/> Post</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Documents */}
+      {tab === 'documents' && (
+        <div className="fade-in">
+          <div style={{marginBottom:'16px',display:'flex',justifyContent:'flex-end'}}>
+            <label className="btn btn-secondary btn-sm" style={{cursor:'pointer'}}>
+              <Icon name="upload" size={14}/> Upload Document
+              <input type="file" style={{display:'none'}} onChange={async e=>{
+                const file = e.target.files[0];
+                if (!file) return;
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('title', file.name);
+                fd.append('doc_type', 'other');
+                try {
+                  const res = await fetch(`/api/projects/${projectId}/documents/`, {
+                    method:'POST', headers:{'Authorization':`Token ${api.token()}`}, body: fd
+                  });
+                  if (res.ok) { showToast('Document uploaded!','success'); refresh(); }
+                  else showToast('Upload failed','error');
+                } catch { showToast('Upload failed','error'); }
+                e.target.value = '';
+              }}/>
+            </label>
+          </div>
+          {project.documents?.length > 0 ? (
+            <div style={{display:'flex',flexDirection:'column',gap:'10px'}}>
+              {project.documents.map(d => (
+                <div key={d.id} style={{display:'flex',alignItems:'center',gap:'14px',padding:'14px 18px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:'12px'}}>
+                  <div style={{width:42,height:42,borderRadius:'10px',background:'rgba(59,130,246,0.1)',color:'var(--accent2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                    <Icon name="projects" size={20}/>
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:600,color:'var(--text)',fontSize:'0.875rem'}}>{d.title}</div>
+                    <div style={{fontSize:'0.72rem',color:'var(--text3)',marginTop:'3px'}}>
+                      {d.doc_type} · {d.uploaded_by_name} · {fmtDate(d.uploaded_at)} · {d.file_size?`${(d.file_size/1024).toFixed(1)} KB`:''}
+                    </div>
+                  </div>
+                  {d.file_url && (
+                    <a href={d.file_url} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm" onClick={e=>e.stopPropagation()}>
+                      <Icon name="download" size={13}/> Download
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : <div className="empty-state"><Icon name="upload" size={36}/><p>No documents uploaded yet</p></div>}
+        </div>
+      )}
+
+      {/* Add Milestone Modal */}
+      {showMilestoneModal && (
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setShowMilestoneModal(false)}>
+          <div className="modal">
+            <div className="modal-header">
+              <span className="modal-title">Add Milestone</span>
+              <button className="btn btn-ghost" style={{padding:'6px'}} onClick={()=>setShowMilestoneModal(false)}><Icon name="x" size={16}/></button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label">Title *</label>
+                <input className="form-input" placeholder="e.g. Literature Review" value={newMilestone.title} onChange={e=>setNewMilestone(f=>({...f,title:e.target.value}))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Description</label>
+                <textarea className="form-textarea" placeholder="What should be done…" value={newMilestone.description} onChange={e=>setNewMilestone(f=>({...f,description:e.target.value}))} />
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+                <div className="form-group">
+                  <label className="form-label">Due Date</label>
+                  <input type="date" className="form-input" value={newMilestone.due_date} onChange={e=>setNewMilestone(f=>({...f,due_date:e.target.value}))} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Initial Status</label>
+                  <select className="form-select" value={newMilestone.status} onChange={e=>setNewMilestone(f=>({...f,status:e.target.value}))}>
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={()=>setShowMilestoneModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={addMilestone} disabled={!newMilestone.title}>Add Milestone</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Users ────────────────────────────────────────────────────
+const UsersPage = ({ user: currentUser }) => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [roleFilter, setRoleFilter] = useState('');
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    let url = '/auth/users/';
+    if (roleFilter) url += `?role=${roleFilter}`;
+    api.get(url).then(d=>setUsers(d.results||d)).catch(()=>showToast('Failed to load users','error')).finally(()=>setLoading(false));
+  }, [roleFilter]);
+
+  const filtered = users.filter(u =>
+    !search || (u.first_name+' '+u.last_name+' '+u.username+' '+(u.matric_number||'')).toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="page fade-in">
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'24px',flexWrap:'wrap',gap:'12px'}}>
+        <div>
+          <h1 style={{fontFamily:'var(--font-display)',fontSize:'1.4rem',fontWeight:'800'}}>People</h1>
+          <p style={{color:'var(--text3)',fontSize:'0.82rem',marginTop:'3px'}}>{filtered.length} member{filtered.length!==1?'s':''}</p>
+        </div>
+      </div>
+
+      <div style={{display:'flex',gap:'10px',marginBottom:'20px',flexWrap:'wrap'}}>
+        <div className="search-bar" style={{flex:1,minWidth:'200px'}}>
+          <Icon name="search" size={15}/>
+          <input placeholder="Search by name, matric…" value={search} onChange={e=>setSearch(e.target.value)} />
+        </div>
+        <select className="form-select" style={{width:'150px'}} value={roleFilter} onChange={e=>setRoleFilter(e.target.value)}>
+          <option value="">All Roles</option>
+          <option value="student">Students</option>
+          <option value="supervisor">Supervisors</option>
+          <option value="coordinator">Coordinators</option>
+        </select>
+      </div>
+
+      {loading ? (
+        <div style={{display:'flex',justifyContent:'center',paddingTop:60}}><div className="spinner"/></div>
+      ) : (
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:'14px'}}>
+          {filtered.map(u => (
+            <div key={u.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:'14px',padding:'20px',transition:'border-color 0.2s,transform 0.2s'}}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--border2)';e.currentTarget.style.transform='translateY(-2px)';}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.transform='';}}
+            >
+              <div style={{display:'flex',gap:'12px',alignItems:'flex-start',marginBottom:'14px'}}>
+                <AvatarEl initials={u.avatar_initials} colorSeed={u.username} size="lg"/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontWeight:700,color:'var(--text)',fontSize:'0.95rem'}}>{u.full_name}</div>
+                  <div style={{fontSize:'0.75rem',color:'var(--text3)',marginTop:'2px'}}>{u.email}</div>
+                  <div style={{marginTop:'6px',display:'flex',gap:'6px',flexWrap:'wrap'}}>
+                    <span className={`role-badge role-${u.role}`}>{u.role}</span>
+                    {u.level && <span className="tag" style={{fontSize:'0.68rem'}}>{u.level}</span>}
+                  </div>
+                </div>
+              </div>
+              {u.matric_number && (
+                <div style={{display:'flex',gap:'8px',padding:'8px 12px',background:'var(--surface)',borderRadius:'8px'}}>
+                  <span style={{fontSize:'0.72rem',color:'var(--text3)'}}>Matric:</span>
+                  <span style={{fontSize:'0.72rem',color:'var(--text2)',fontFamily:'monospace',fontWeight:600}}>{u.matric_number}</span>
+                </div>
+              )}
+              {u.session && <div style={{fontSize:'0.72rem',color:'var(--text3)',marginTop:'8px'}}>Session: {u.session}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Topics ───────────────────────────────────────────────────
+const TopicsPage = ({ user }) => {
+  const [topics, setTopics] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({ title:'', description:'' });
+
+  const load = () => api.get('/topics/').then(d=>setTopics(d.results||d)).finally(()=>setLoading(false));
+  useEffect(() => { load(); }, []);
+
+  const create = async () => {
+    try {
+      await api.post('/topics/', form);
+      showToast('Topic added!','success');
+      setShowModal(false);
+      setForm({title:'',description:''});
+      load();
+    } catch { showToast('Failed to add topic','error'); }
+  };
+
+  return (
+    <div className="page fade-in">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'24px'}}>
+        <h1 style={{fontFamily:'var(--font-display)',fontSize:'1.4rem',fontWeight:'800'}}>Project Topics</h1>
+        <button className="btn btn-primary" onClick={()=>setShowModal(true)}><Icon name="plus" size={15}/> Suggest Topic</button>
+      </div>
+      {loading ? <div style={{display:'flex',justifyContent:'center',paddingTop:60}}><div className="spinner"/></div> : (
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:'14px'}}>
+          {topics.map(t => (
+            <div key={t.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:'14px',padding:'20px',transition:'all 0.2s'}}
+              onMouseEnter={e=>e.currentTarget.style.borderColor='var(--border2)'}
+              onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
+              <div style={{display:'flex',alignItems:'flex-start',gap:'10px',marginBottom:'10px'}}>
+                <div style={{width:36,height:36,borderRadius:'10px',background:'rgba(59,130,246,0.1)',color:'var(--accent2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <Icon name="topic" size={16}/>
+                </div>
+                <div>
+                  <div style={{fontWeight:600,color:'var(--text)',fontSize:'0.9rem',lineHeight:1.3}}>{t.title}</div>
+                  <span className={`badge-status ${t.is_available?'status-approved':'status-rejected'}`} style={{marginTop:'5px',fontSize:'0.68rem'}}>
+                    {t.is_available?'Available':'Taken'}
+                  </span>
+                </div>
+              </div>
+              {t.description && <p style={{fontSize:'0.8rem',color:'var(--text3)',lineHeight:1.5}}>{t.description}</p>}
+              <div style={{fontSize:'0.7rem',color:'var(--text3)',marginTop:'10px'}}>{fmtDate(t.created_at)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showModal && (
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setShowModal(false)}>
+          <div className="modal">
+            <div className="modal-header">
+              <span className="modal-title">Suggest a Topic</span>
+              <button className="btn btn-ghost" style={{padding:'6px'}} onClick={()=>setShowModal(false)}><Icon name="x" size={16}/></button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label">Topic Title *</label>
+                <input className="form-input" placeholder="e.g. AI-Powered Attendance System" value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Description</label>
+                <textarea className="form-textarea" placeholder="Brief description of what the project will cover…" value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={()=>setShowModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={create} disabled={!form.title}>Submit Topic</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Announcements ────────────────────────────────────────────
+const AnnouncementsPage = ({ user }) => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({ title:'', body:'', target_role:'', is_pinned: false });
+  const canCreate = ['admin','coordinator','supervisor'].includes(user.role);
+
+  const load = () => api.get('/announcements/').then(d=>setItems(d.results||d)).finally(()=>setLoading(false));
+  useEffect(() => { load(); }, []);
+
+  const create = async () => {
+    try {
+      await api.post('/announcements/', form);
+      showToast('Announcement posted!','success');
+      setShowModal(false);
+      setForm({title:'',body:'',target_role:'',is_pinned:false});
+      load();
+    } catch { showToast('Failed to post','error'); }
+  };
+
+  return (
+    <div className="page fade-in">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'24px'}}>
+        <h1 style={{fontFamily:'var(--font-display)',fontSize:'1.4rem',fontWeight:'800'}}>Announcements</h1>
+        {canCreate && <button className="btn btn-primary" onClick={()=>setShowModal(true)}><Icon name="plus" size={15}/> Post</button>}
+      </div>
+      {loading ? <div style={{display:'flex',justifyContent:'center',paddingTop:60}}><div className="spinner"/></div> : items.length === 0 ?
+        <div className="empty-state"><Icon name="announce" size={40}/><p>No announcements yet</p></div> :
+        items.map(a => (
+          <div key={a.id} className={`announcement-card ${a.is_pinned?'pinned':''}`}>
+            {a.is_pinned && <span className="pin-icon"><Icon name="pin" size={14}/></span>}
+            <div className="ann-title" style={{fontSize:'1rem'}}>{a.title}</div>
+            <div className="ann-body">{a.body}</div>
+            <div className="ann-meta" style={{display:'flex',gap:'12px',flexWrap:'wrap'}}>
+              <span>By {a.author_name}</span>
+              <span>{fmtRelative(a.created_at)}</span>
+              {a.target_role && <span className={`role-badge role-${a.target_role}`}>For {a.target_role}s</span>}
+              {a.is_pinned && <span style={{color:'var(--yellow)',fontSize:'0.7rem'}}>📌 Pinned</span>}
+            </div>
+          </div>
+        ))
+      }
+
+      {showModal && (
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setShowModal(false)}>
+          <div className="modal">
+            <div className="modal-header">
+              <span className="modal-title">Post Announcement</span>
+              <button className="btn btn-ghost" style={{padding:'6px'}} onClick={()=>setShowModal(false)}><Icon name="x" size={16}/></button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label">Title *</label>
+                <input className="form-input" placeholder="Announcement title" value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Message *</label>
+                <textarea className="form-textarea" style={{minHeight:'120px'}} placeholder="Write the announcement…" value={form.body} onChange={e=>setForm(f=>({...f,body:e.target.value}))} />
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:'12px',alignItems:'end'}}>
+                <div className="form-group" style={{marginBottom:0}}>
+                  <label className="form-label">Target Audience</label>
+                  <select className="form-select" value={form.target_role} onChange={e=>setForm(f=>({...f,target_role:e.target.value}))}>
+                    <option value="">Everyone</option>
+                    <option value="student">Students Only</option>
+                    <option value="supervisor">Supervisors Only</option>
+                  </select>
+                </div>
+                <label style={{display:'flex',alignItems:'center',gap:'8px',cursor:'pointer',padding:'10px 0',fontSize:'0.82rem',color:'var(--text2)'}}>
+                  <input type="checkbox" checked={form.is_pinned} onChange={e=>setForm(f=>({...f,is_pinned:e.target.checked}))} />
+                  📌 Pin it
+                </label>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={()=>setShowModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={create} disabled={!form.title||!form.body}>Post</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Notifications ────────────────────────────────────────────
+const NotificationsPage = () => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get('/notifications/').then(d=>setItems(d.results||d)).finally(()=>setLoading(false));
+    api.post('/notifications/read/', {});
+  }, []);
+
+  const typeColors = { success:'var(--green)', info:'var(--accent)', warning:'var(--yellow)', deadline:'var(--red)', comment:'var(--purple)', status:'var(--cyan)', assignment:'var(--orange)' };
+
+  return (
+    <div className="page fade-in">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'24px'}}>
+        <h1 style={{fontFamily:'var(--font-display)',fontSize:'1.4rem',fontWeight:'800'}}>Notifications</h1>
+        <button className="btn btn-secondary btn-sm" onClick={()=>api.post('/notifications/read/',{}).then(()=>{setItems(i=>i.map(n=>({...n,is_read:true})));showToast('All marked as read','success');})}>
+          Mark all read
+        </button>
+      </div>
+      {loading ? <div style={{display:'flex',justifyContent:'center',paddingTop:60}}><div className="spinner"/></div> :
+        items.length === 0 ? <div className="empty-state"><Icon name="bell" size={40}/><p>No notifications</p></div> :
+        <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+          {items.map(n => (
+            <div key={n.id} style={{display:'flex',gap:'12px',padding:'16px',background:'var(--bg2)',border:`1px solid ${n.is_read?'var(--border)':'rgba(59,130,246,0.25)'}`,borderRadius:'12px',transition:'all 0.2s',background:n.is_read?'var(--bg2)':'rgba(59,130,246,0.04)'}}>
+              <div className="notif-icon" style={{background:`${(typeColors[n.notif_type]||'var(--accent)')}20`,color:typeColors[n.notif_type]||'var(--accent)'}}>
+                <Icon name="bell" size={16}/>
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:600,color:'var(--text)',fontSize:'0.875rem'}}>{n.title}</div>
+                <div style={{fontSize:'0.8rem',color:'var(--text3)',marginTop:'3px',lineHeight:1.5}}>{n.message}</div>
+                <div style={{fontSize:'0.7rem',color:'var(--text3)',marginTop:'6px'}}>{fmtRelative(n.created_at)}</div>
+              </div>
+              {!n.is_read && <div style={{width:8,height:8,borderRadius:'50%',background:'var(--accent)',flexShrink:0,marginTop:6}}/>}
+            </div>
+          ))}
+        </div>
+      }
+    </div>
+  );
+};
+
+// ─── Analytics ────────────────────────────────────────────────
+const AnalyticsPage = () => {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { api.get('/stats/').then(setStats).finally(()=>setLoading(false)); }, []);
+
+  if (loading) return <div className="page"><div style={{display:'flex',justifyContent:'center',paddingTop:80}}><div className="spinner"/></div></div>;
+  if (!stats) return null;
+
+  const statusColors = { proposal:'var(--text3)',approved:'var(--cyan)',in_progress:'var(--accent)',submitted:'var(--purple)',revision:'var(--yellow)',completed:'var(--green)',rejected:'var(--red)' };
+  const total = stats.total || 1;
+
+  return (
+    <div className="page fade-in">
+      <h1 style={{fontFamily:'var(--font-display)',fontSize:'1.4rem',fontWeight:'800',marginBottom:'24px'}}>Analytics</h1>
+
+      <div className="stat-grid" style={{marginBottom:'28px'}}>
+        {[
+          {label:'Total Projects',value:stats.total,color:'blue',icon:'projects'},
+          {label:'Total Students',value:stats.total_students,color:'cyan',icon:'users'},
+          {label:'Total Supervisors',value:stats.total_supervisors,color:'purple',icon:'users'},
+          {label:'Completed',value:stats.by_status?.completed?.count||0,color:'green',icon:'check'},
+        ].map((s,i)=>(
+          <div key={i} className={`stat-card ${s.color}`}>
+            <div className="label">{s.label}</div>
+            <div className="value">{s.value}</div>
+            <div className="icon-wrap"><Icon name={s.icon} size={18}/></div>
+          </div>
+        ))}
+      </div>
+
+      <div className="two-col">
+        <div className="card">
+          <div className="card-header"><span className="card-title">Projects by Status</span></div>
+          <div className="card-body">
+            {Object.entries(stats.by_status||{}).map(([status, info]) => (
+              <div key={status} style={{marginBottom:'16px'}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:'6px'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                    <div style={{width:10,height:10,borderRadius:'50%',background:statusColors[status]||'var(--text3)',flexShrink:0}}/>
+                    <span style={{fontSize:'0.82rem',color:'var(--text2)'}}>{info.label}</span>
+                  </div>
+                  <span style={{fontSize:'0.82rem',fontWeight:600,color:'var(--text)'}}>{info.count}</span>
+                </div>
+                <div style={{height:8,background:'var(--surface)',borderRadius:99,overflow:'hidden'}}>
+                  <div style={{height:'100%',borderRadius:99,background:statusColors[status]||'var(--text3)',width:`${(info.count/total)*100}%`,transition:'width 0.5s ease'}}/>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header"><span className="card-title">Academic Sessions</span></div>
+          <div className="card-body">
+            {stats.sessions?.length > 0 ? stats.sessions.filter(Boolean).map(s => (
+              <div key={s} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',background:'var(--surface)',borderRadius:'10px',marginBottom:'8px'}}>
+                <span style={{fontWeight:600,color:'var(--text)',fontFamily:'var(--font-display)'}}>{s}</span>
+                <span className="tag">Session</span>
+              </div>
+            )) : <div className="empty-state" style={{padding:'20px'}}><p>No session data</p></div>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Profile Page ─────────────────────────────────────────────
+const ProfilePage = ({ user, onUpdate }) => {
+  const [form, setForm] = useState({ ...user });
+  const [saving, setSaving] = useState(false);
+  const [pwForm, setPwForm] = useState({ old_password:'', new_password1:'', new_password2:'' });
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const updated = await api.patch('/auth/profile/', form);
+      onUpdate(updated);
+      showToast('Profile updated!','success');
+    } catch(e) {
+      showToast(Object.values(e.data||{}).flat().join(' ')||'Failed to update','error');
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="page fade-in">
+      <h1 style={{fontFamily:'var(--font-display)',fontSize:'1.4rem',fontWeight:'800',marginBottom:'24px'}}>My Profile</h1>
+      <div className="two-col">
+        <div className="card">
+          <div className="card-header"><span className="card-title">Personal Information</span></div>
+          <div className="card-body">
+            <div style={{display:'flex',alignItems:'center',gap:'16px',marginBottom:'24px',padding:'16px',background:'var(--surface)',borderRadius:'12px'}}>
+              <AvatarEl initials={form.avatar_initials} colorSeed={form.username} size="lg"/>
+              <div>
+                <div style={{fontFamily:'var(--font-display)',fontWeight:'700',fontSize:'1.05rem',color:'var(--text)'}}>{form.first_name} {form.last_name}</div>
+                <div style={{color:'var(--text3)',fontSize:'0.8rem',marginTop:'3px'}}>{form.email}</div>
+                <span className={`role-badge role-${form.role}`} style={{marginTop:'6px',display:'inline-block'}}>{form.role}</span>
+              </div>
+            </div>
+
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+              {[['first_name','First Name'],['last_name','Last Name']].map(([k,l])=>(
+                <div key={k} className="form-group" style={{marginBottom:0}}>
+                  <label className="form-label">{l}</label>
+                  <input className="form-input" value={form[k]||''} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} />
+                </div>
+              ))}
+            </div>
+            <div className="form-group" style={{marginTop:'12px'}}>
+              <label className="form-label">Email</label>
+              <input className="form-input" type="email" value={form.email||''} onChange={e=>setForm(f=>({...f,email:e.target.value}))} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Phone</label>
+              <input className="form-input" placeholder="+234 800 000 0000" value={form.phone||''} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Bio</label>
+              <textarea className="form-textarea" placeholder="Tell us about yourself…" value={form.bio||''} onChange={e=>setForm(f=>({...f,bio:e.target.value}))} />
+            </div>
+
+            <button className="btn btn-primary" style={{width:'100%'}} onClick={save} disabled={saving}>
+              {saving?<span className="spinner spinner-sm"/>:'Save Changes'}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div className="card">
+            <div className="card-header"><span className="card-title">Account Details</span></div>
+            <div className="card-body">
+              {[
+                ['Username', user.username],
+                ['Role', user.role],
+                ['Department', user.department],
+                ['Level', user.level||'—'],
+                ['Session', user.session||'—'],
+                ['Matric No.', user.matric_number||'—'],
+                ['Member Since', fmtDate(user.date_joined)],
+              ].map(([k,v])=>(
+                <div key={k} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid var(--border)'}}>
+                  <span style={{fontSize:'0.82rem',color:'var(--text3)'}}>{k}</span>
+                  <span style={{fontSize:'0.82rem',fontWeight:500,color:'var(--text)',fontFamily:k==='Username'||k==='Matric No.'?'monospace':'inherit'}}>{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── App ──────────────────────────────────────────────────────
+const App = () => {
+  const [user, setUser] = useState(null);
+  const [ready, setReady] = useState(false);
+  const [page, setPage] = useState('dashboard');
+  const [pageParam, setPageParam] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const notifRef = useRef(null);
+
+  // Boot
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      api.get('/auth/profile/').then(u => { setUser(u); }).catch(() => localStorage.removeItem('token')).finally(() => {
+        setTimeout(() => setReady(true), 600);
+      });
+    } else {
+      setTimeout(() => setReady(true), 600);
+    }
+  }, []);
+
+  // Load unread count
+  useEffect(() => {
+    if (!user) return;
+    const fetchNotifs = () => {
+      api.get('/notifications/').then(d => {
+        const items = d.results || d;
+        setNotifications(items.slice(0,10));
+        setUnreadCount(items.filter(n=>!n.is_read).length);
+      }).catch(()=>{});
+    };
+    fetchNotifs();
+    const interval = setInterval(fetchNotifs, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Close notif panel on outside click
+  useEffect(() => {
+    const handler = e => { if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifPanel(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const navigate = (p, param=null) => { setPage(p); setPageParam(param); setShowNotifPanel(false); };
+
+  const logout = async () => {
+    try { await api.post('/auth/logout/'); } catch {}
+    localStorage.removeItem('token');
+    setUser(null);
+    setPage('dashboard');
+    showToast('Logged out successfully', 'info');
+  };
+
+  // Hide loading screen
+  useEffect(() => {
+    if (ready) {
+      const ls = document.getElementById('loading-screen');
+      if (ls) { ls.style.opacity='0'; setTimeout(()=>ls.remove(), 400); }
+    }
+  }, [ready]);
+
+  if (!ready) return null;
+  if (!user) return <AuthPage onLogin={u=>{ setUser(u); setPage('dashboard'); }} />;
+
+  const pageTitle = { dashboard:'Dashboard', projects:'Projects', 'project-detail':'Project Detail', users:'People', topics:'Topics', announcements:'Announcements', notifications:'Notifications', stats:'Analytics', profile:'My Profile' };
+
+  const markAllRead = () => {
+    api.post('/notifications/read/', {}).then(() => {
+      setUnreadCount(0);
+      setNotifications(n=>n.map(x=>({...x,is_read:true})));
+    });
+  };
+
+  return (
+    <div id="app-shell">
+      <Sidebar user={user} currentPage={page} navigate={navigate} onLogout={logout} unreadCount={unreadCount} />
+      <div className="main-content">
+        <div className="topbar">
+          <span className="topbar-title">{pageTitle[page] || page}</span>
+          <div className="topbar-actions">
+            <div ref={notifRef} style={{position:'relative'}}>
+              <div className="icon-btn" onClick={()=>setShowNotifPanel(v=>!v)}>
+                <Icon name="bell" size={16}/>
+                {unreadCount > 0 && <span className="notif-dot"/>}
+              </div>
+              {showNotifPanel && (
+                <div className="notif-panel">
+                  <div style={{padding:'14px 16px',borderBottom:'1px solid var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <span style={{fontWeight:700,fontSize:'0.9rem',fontFamily:'var(--font-display)'}}>Notifications</span>
+                    <div style={{display:'flex',gap:'8px'}}>
+                      {unreadCount>0&&<button className="btn btn-ghost btn-xs" onClick={markAllRead}>Mark all read</button>}
+                      <button className="btn btn-ghost btn-xs" onClick={()=>navigate('notifications')}>View all</button>
+                    </div>
+                  </div>
+                  {notifications.length === 0 ? (
+                    <div className="empty-state" style={{padding:'24px'}}><p>All caught up!</p></div>
+                  ) : notifications.slice(0,8).map(n => (
+                    <div key={n.id} className={`notif-item ${!n.is_read?'unread':''}`} onClick={()=>{navigate('notifications');setShowNotifPanel(false);}}>
+                      <div className="notif-icon" style={{background:'rgba(59,130,246,0.1)',color:'var(--accent2)'}}><Icon name="bell" size={14}/></div>
+                      <div className="notif-content">
+                        <div className="notif-title">{n.title}</div>
+                        <div className="notif-msg">{n.message.substring(0,70)}{n.message.length>70?'...':''}</div>
+                        <div className="notif-time">{fmtRelative(n.created_at)}</div>
+                      </div>
+                      {!n.is_read&&<div style={{width:8,height:8,borderRadius:'50%',background:'var(--accent)',flexShrink:0,marginTop:6}}/>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="icon-btn" onClick={()=>navigate('profile')} data-tip="Profile">
+              <Icon name="profile" size={16}/>
+            </div>
+          </div>
+        </div>
+
+        {page === 'dashboard' && <Dashboard user={user} navigate={navigate} />}
+        {page === 'projects' && <ProjectsList user={user} navigate={navigate} />}
+        {page === 'project-detail' && <ProjectDetail projectId={pageParam} user={user} navigate={navigate} />}
+        {page === 'users' && <UsersPage user={user} />}
+        {page === 'topics' && <TopicsPage user={user} />}
+        {page === 'announcements' && <AnnouncementsPage user={user} />}
+        {page === 'notifications' && <NotificationsPage />}
+        {page === 'stats' && <AnalyticsPage />}
+        {page === 'profile' && <ProfilePage user={user} onUpdate={u=>{setUser(u);showToast('Profile updated!','success');}} />}
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
